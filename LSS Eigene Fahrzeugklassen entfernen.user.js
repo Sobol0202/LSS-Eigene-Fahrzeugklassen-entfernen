@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         LSS Eigene Fahrzeugklassen entfernen
 // @namespace    www.leitstellenspiel.de
-// @version      1.0
-// @description  Fügt Dialog zum entfernen der eigenen Fahrzeugklassen ein.
+// @version      1.1
+// @description  Fügt Dialog zum Entfernen der eigenen Fahrzeugklassen ein.
 // @author       MissSobol
 // @match        https://www.leitstellenspiel.de/*
 // @grant        GM_getResourceURL
@@ -11,6 +11,9 @@
 
 (function() {
     'use strict';
+
+    // Opt-in für die zusätzliche Anzeige in der Sicherheitsabfrage
+    const optInAdditionalDisplay = false;
 
     // create a trigger-element
     const triggerLi = document.createElement('li');
@@ -143,14 +146,22 @@
             const confirmDialog = document.createElement('dialog');
             confirmDialog.classList.add('Klassenschrotter-dialog');
             confirmDialog.innerHTML = `
-                <form method="dialog">
-                    <p>Es wurden ${vehicleIds.length} Fahrzeuge des Typs "${selectedCaption}" gefunden. Sollen diese wirklich ihre Standartklasse erhalten?</p>
-                    <menu>
-                        <button type="submit" value="confirm">Bestätigen</button>
-                        <button type="button" id="cancelConfirmButton">Abbrechen</button>
-                    </menu>
-                </form>
-            `;
+    <form method="dialog">
+        <p>Es wurden ${vehicleIds.length} Fahrzeuge des Typs "${selectedCaption}" gefunden. Sollen diese wirklich ihre Standartklasse erhalten?</p>
+        ${optInAdditionalDisplay ? `
+            <ul>
+                ${filteredVehicles.map(vehicle => `
+                    <li>${vehicle.caption}
+                        <button class="openInNewTab" data-id="${vehicle.id}" type="button">Öffnen</button>
+                    </li>
+                `).join('')}
+            </ul>` : ''}
+        <menu>
+            <button type="submit" value="confirm">Bestätigen</button>
+            <button type="button" id="cancelConfirmButton">Abbrechen</button>
+        </menu>
+    </form>
+`;
             document.body.appendChild(confirmDialog);
 
             // Dialog anzeigen und Auswahl abwarten
@@ -165,6 +176,14 @@
             confirmForm.addEventListener('submit', event => {
                 event.preventDefault();
                 confirmDialog.close(confirmForm.returnValue);
+            });
+
+            // Öffnen in neuem Tab
+            confirmDialog.querySelectorAll('.openInNewTab').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = button.getAttribute('data-id');
+                    window.open(`https://www.leitstellenspiel.de/vehicles/${id}`, '_blank');
+                });
             });
 
             const confirmResult = await new Promise(resolve => confirmDialog.addEventListener('close', () => resolve(confirmDialog.returnValue)));
