@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LSS Eigene Fahrzeugklassen entfernen
 // @namespace    www.leitstellenspiel.de
-// @version      1.1
+// @version      1.2
 // @description  Fügt Dialog zum Entfernen der eigenen Fahrzeugklassen ein.
 // @author       MissSobol
 // @match        https://www.leitstellenspiel.de/*
@@ -91,8 +91,8 @@
             const response = await fetch("https://www.leitstellenspiel.de/api/vehicles");
             const vehicles = await response.json();
 
-            // Ermitteln aller einzigartigen vehicle_type_caption
-            const uniqueCaptions = [...new Set(vehicles.map(vehicle => vehicle.vehicle_type_caption).filter(caption => caption))];
+            // Ermitteln aller einzigartigen vehicle_type_caption und alphabetisch sortieren
+            const uniqueCaptions = [...new Set(vehicles.map(vehicle => vehicle.vehicle_type_caption).filter(caption => caption))].sort();
 
             // Dialog erstellen
             const dialog = document.createElement('dialog');
@@ -146,22 +146,22 @@
             const confirmDialog = document.createElement('dialog');
             confirmDialog.classList.add('Klassenschrotter-dialog');
             confirmDialog.innerHTML = `
-    <form method="dialog">
-        <p>Es wurden ${vehicleIds.length} Fahrzeuge des Typs "${selectedCaption}" gefunden. Sollen diese wirklich ihre Standartklasse erhalten?</p>
-        ${optInAdditionalDisplay ? `
-            <ul>
-                ${filteredVehicles.map(vehicle => `
-                    <li>${vehicle.caption}
-                        <button class="openInNewTab" data-id="${vehicle.id}" type="button">Öffnen</button>
-                    </li>
-                `).join('')}
-            </ul>` : ''}
-        <menu>
-            <button type="submit" value="confirm">Bestätigen</button>
-            <button type="button" id="cancelConfirmButton">Abbrechen</button>
-        </menu>
-    </form>
-`;
+                <form method="dialog">
+                    <p>Es wurden ${vehicleIds.length} Fahrzeuge des Typs "${selectedCaption}" gefunden. Sollen diese wirklich ihre Standartklasse erhalten?</p>
+                    ${optInAdditionalDisplay ? `
+                        <ul>
+                            ${filteredVehicles.map(vehicle => `
+                                <li>${vehicle.caption}
+                                    <button class="openInNewTab" data-id="${vehicle.id}" type="button">Öffnen</button>
+                                </li>
+                            `).join('')}
+                        </ul>` : ''}
+                    <menu>
+                        <button type="submit" value="confirm">Bestätigen</button>
+                        <button type="button" id="cancelConfirmButton">Abbrechen</button>
+                    </menu>
+                </form>
+            `;
             document.body.appendChild(confirmDialog);
 
             // Dialog anzeigen und Auswahl abwarten
